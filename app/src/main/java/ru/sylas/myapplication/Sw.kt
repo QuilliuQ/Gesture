@@ -1,6 +1,7 @@
 package ru.sylas.myapplication
 
 import android.content.Context
+import android.util.Log
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
@@ -9,64 +10,32 @@ import android.view.View.OnTouchListener
 import kotlin.math.abs
 
 
-open class OnSwipeTouchListener(ctx: Context?) : OnTouchListener {
-    private val gestureDetector: GestureDetector
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        return gestureDetector.onTouchEvent(event)
-    }
+open class OnSwipeTouchListener(ctx: Context?, private val action: Action) : OnTouchListener {
 
-    private inner class GestureListener : SimpleOnGestureListener() {
-        override fun onDown(e: MotionEvent): Boolean {
-            return true
-        }
-
-        override fun onFling(
-            e1: MotionEvent,
-            e2: MotionEvent,
-            velocityX: Float,
-            velocityY: Float
-        ): Boolean {
-            var result = false
-            try {
-                val diffY = e2.y - e1.y
-                val diffX = e2.x - e1.x
-                if (abs(diffX) > abs(diffY)) {
-                    if (abs(diffX) > Companion.SWIPE_THRESHOLD && abs(velocityX) > Companion.SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffX > 0) {
-                            onSwipeRight()
-                        } else {
-                            onSwipeLeft()
-                        }
-                        result = true
-                    }
-                } else if (abs(diffY) > Companion.SWIPE_THRESHOLD && abs(velocityY) > Companion.SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffY > 0) {
-                        onSwipeBottom()
-                    } else {
-                        onSwipeTop()
-                    }
-                    result = true
-                }
-            } catch (exception: Exception) {
-                exception.printStackTrace()
+    var dX = 0f
+    var dY = 0f
+    var viexX = 0f
+    var viewY = 0f
+    override fun onTouch(view: View, event: MotionEvent): Boolean {
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                viexX = view.x
+                viewY = view.y
+                dX = view.x - event.rawX
+                dY = view.y - event.rawY
             }
-            return result
+            MotionEvent.ACTION_MOVE -> {
+                view.animate()
+                    .x(event.rawX + dX)
+                    .setDuration(0)
+                    .start()
+                Log.d("My","${viexX}${viewY}")
+            }
+
+            else -> return false
         }
-
-
+        return true
     }
 
-    companion object {
-        private const val SWIPE_THRESHOLD = 100
-        private const val SWIPE_VELOCITY_THRESHOLD = 100
-    }
 
-    open fun onSwipeRight() {}
-    open fun onSwipeLeft() {}
-    open fun onSwipeTop() {}
-    open fun onSwipeBottom() {}
-
-    init {
-        gestureDetector = GestureDetector(ctx, GestureListener())
-    }
 }
